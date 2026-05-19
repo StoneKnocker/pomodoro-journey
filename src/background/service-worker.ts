@@ -9,6 +9,15 @@ const OFFSCREEN_DOC = "offscreen.html";
 
 let offscreenReady = false;
 
+function getNextDailyAlarmTime(): number {
+  const now = new Date();
+  const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 30, 0, 0);
+  if (target.getTime() <= now.getTime()) {
+    target.setDate(target.getDate() + 1);
+  }
+  return target.getTime();
+}
+
 async function ensureOffscreen(): Promise<void> {
   if (offscreenReady) {
     return;
@@ -116,13 +125,19 @@ async function maybeGenerateMissedDailyReport(): Promise<void> {
 
 chrome.runtime.onInstalled.addListener(async () => {
   await chrome.alarms.create(TICK_ALARM, { periodInMinutes: 1 });
-  await chrome.alarms.create(DAILY_REPORT_ALARM, { periodInMinutes: 60 });
+  await chrome.alarms.create(DAILY_REPORT_ALARM, {
+    when: getNextDailyAlarmTime(),
+    periodInMinutes: 1440
+  });
   await updateBadge();
 });
 
 chrome.runtime.onStartup.addListener(async () => {
   await chrome.alarms.create(TICK_ALARM, { periodInMinutes: 1 });
-  await chrome.alarms.create(DAILY_REPORT_ALARM, { periodInMinutes: 60 });
+  await chrome.alarms.create(DAILY_REPORT_ALARM, {
+    when: getNextDailyAlarmTime(),
+    periodInMinutes: 1440
+  });
   await runTick();
   await maybeGenerateMissedDailyReport();
 });
@@ -133,11 +148,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   }
 
   if (alarm.name === DAILY_REPORT_ALARM) {
-    const data = await loadData();
-    const hour = new Date().getHours();
-    if (hour >= data.settings.dailyReportHour) {
-      await maybeGenerateMissedDailyReport();
-    }
+    await maybeGenerateMissedDailyReport();
   }
 });
 

@@ -1,8 +1,9 @@
-import { Download, Save, Sparkles } from "lucide-react";
+import { Download, FileText, Save, Sparkles } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { loadData } from "../lib/storage";
 import type { AppData, ClientMessage } from "../lib/types";
 import { DEFAULT_DATA } from "../lib/defaults";
+import { toLocalDateKey } from "../lib/time";
 
 interface RuntimeResponse {
   ok: boolean;
@@ -49,6 +50,19 @@ export function Options() {
     }
   }
 
+  async function generateDailyReport() {
+    setStatus("");
+    try {
+      const date = toLocalDateKey(new Date());
+      const next = await sendMessage({ type: "GENERATE_DAILY_REPORT", date });
+      setData(next);
+      setStatus("日报已生成");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  const todayKey = toLocalDateKey(new Date());
   const latestReport = data.reports[0];
 
   return (
@@ -85,21 +99,6 @@ export function Options() {
                 setData({
                   ...data,
                   settings: { ...data.settings, breakMinutes: Number(event.target.value) }
-                })
-              }
-            />
-          </label>
-          <label>
-            日报补生成小时
-            <input
-              type="number"
-              min="0"
-              max="23"
-              value={data.settings.dailyReportHour}
-              onChange={(event) =>
-                setData({
-                  ...data,
-                  settings: { ...data.settings, dailyReportHour: Number(event.target.value) }
                 })
               }
             />
@@ -193,6 +192,10 @@ export function Options() {
           <button className="primary-button" type="submit">
             <Save size={18} />
             保存设置
+          </button>
+          <button type="button" onClick={generateDailyReport}>
+            <FileText size={18} />
+            生成日报 ({todayKey})
           </button>
           <button type="button" onClick={generateWeeklyReport}>
             <Sparkles size={18} />
