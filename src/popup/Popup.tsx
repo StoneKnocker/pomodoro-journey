@@ -1,7 +1,7 @@
 import { Check, CirclePlus, Coffee, Pause, Play, Settings, Square } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { loadData } from "../lib/storage";
-import type { AppData, ClientMessage, Project } from "../lib/types";
+import type { AppData, ClientMessage, PomodoroSession, Project } from "../lib/types";
 import { DEFAULT_DATA } from "../lib/defaults";
 import { formatTimer, toLocalDateKey } from "../lib/time";
 import { summarizeSessions, getCompletedWorkSessionsForDate } from "../lib/reports";
@@ -18,6 +18,12 @@ async function sendMessage(message: ClientMessage): Promise<AppData> {
     throw new Error(response.error ?? "操作失败");
   }
   return response.data;
+}
+
+function findLastWorkSession(sessions: PomodoroSession[]): PomodoroSession | undefined {
+  return sessions
+    .filter((s) => s.type === "work")
+    .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())[0];
 }
 
 function getSecondsLeft(data: AppData): number {
@@ -40,7 +46,10 @@ export function Popup() {
   useEffect(() => {
     loadData().then((loaded) => {
       setData(loaded);
-      setSelectedProjectId(loaded.projects.find((project) => !project.archived)?.id ?? "");
+      const lastSession = findLastWorkSession(loaded.sessions);
+      setSelectedProjectId(
+        lastSession?.projectId ?? loaded.projects.find((project) => !project.archived)?.id ?? ""
+      );
       setConfirmProjectId(loaded.timer.draft?.projectId ?? "");
       setSecondsLeft(getSecondsLeft(loaded));
     });
