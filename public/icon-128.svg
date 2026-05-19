@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Pomodoro Journey">
+  <rect width="128" height="128" rx="24" fill="#0f766e"/>
+  <circle cx="64" cy="68" r="38" fill="#f7f7f4"/>
+  <path d="M51 34c5-10 18-13 27-5-11 0-19 4-27 5Z" fill="#86a83d"/>
+  <path d="M64 47v24l17 11" fill="none" stroke="#0f766e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

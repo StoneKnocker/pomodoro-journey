@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Pomodoro Journey",
+  "description": "记录番茄钟、整理每日工作内容，并用 AI 生成日报和周报。",
+  "version": "0.1.0",
+  "action": {
+    "default_title": "Pomodoro Journey",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "128": "icon-128.svg"
+    }
+  },
+  "icons": {
+    "128": "icon-128.svg"
+  },
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "options_page": "options.html",
+  "permissions": ["alarms", "notifications", "storage"],
+  "host_permissions": ["<all_urls>"]
+}
