@@ -82,5 +82,7 @@ export type ClientMessage =
   | { type: "START_BREAK" }
   | { type: "COMPLETE_WORK"; projectId: string; note: string }
   | { type: "INTERRUPT_TIMER" }
+  | { type: "CREATE_PROJECT"; name: string }
+  | { type: "UPDATE_SETTINGS"; settings: AppSettings }
   | { type: "GENERATE_DAILY_REPORT"; date?: string }
   | { type: "GENERATE_WEEKLY_REPORT" };

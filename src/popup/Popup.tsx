@@ -1,6 +1,6 @@
 import { Check, CirclePlus, Coffee, Pause, Play, Settings, Square } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { createProject, loadData, saveData } from "../lib/storage";
+import { loadData } from "../lib/storage";
 import type { AppData, ClientMessage, Project } from "../lib/types";
 import { DEFAULT_DATA } from "../lib/defaults";
 import { formatRemainingMinutes, toLocalDateKey } from "../lib/time";
@@ -86,15 +86,16 @@ export function Popup() {
       return;
     }
 
-    const project = createProject(name);
-    const next = {
-      ...data,
-      projects: [...data.projects, project]
-    };
-    await saveData(next);
-    setData(next);
-    setSelectedProjectId(project.id);
-    setNewProjectName("");
+    setError("");
+    try {
+      const next = await sendMessage({ type: "CREATE_PROJECT", name });
+      setData(next);
+      const created = next.projects[next.projects.length - 1];
+      setSelectedProjectId(created.id);
+      setNewProjectName("");
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : String(actionError));
+    }
   }
 
   function projectName(projectId?: string): string {

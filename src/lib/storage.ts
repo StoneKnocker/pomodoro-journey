@@ -43,18 +43,37 @@ export async function loadData(): Promise<AppData> {
   return normalizeData(result[STORAGE_KEY] as Partial<AppData> | undefined);
 }
 
+let writeQueue = Promise.resolve();
+
 export async function saveData(data: AppData): Promise<void> {
   if (!chromeStorageAvailable()) {
     return;
   }
-  await chrome.storage.local.set({ [STORAGE_KEY]: normalizeData(data) });
+
+  const task = () => chrome.storage.local.set({ [STORAGE_KEY]: normalizeData(data) });
+  writeQueue = writeQueue.then(task, task);
+  const myTurn = writeQueue;
+  await myTurn;
 }
 
 export async function updateData(mutator: (data: AppData) => AppData | Promise<AppData>): Promise<AppData> {
-  const current = await loadData();
-  const next = normalizeData(await mutator(current));
-  await saveData(next);
-  return next;
+  let result: AppData;
+
+  if (!chromeStorageAvailable()) {
+    result = normalizeData(await mutator(await loadData()));
+    return result;
+  }
+
+  const task = async () => {
+    const current = await loadData();
+    result = normalizeData(await mutator(current));
+    await chrome.storage.local.set({ [STORAGE_KEY]: result });
+  };
+
+  writeQueue = writeQueue.then(task, task);
+  const myTurn = writeQueue;
+  await myTurn;
+  return result!;
 }
 
 export function createProject(name: string): Project {

@@ -1,5 +1,5 @@
 import { handleClientMessage, tickTimer } from "../lib/messages";
-import { loadData, saveData, updateData } from "../lib/storage";
+import { loadData, updateData } from "../lib/storage";
 import type { ClientMessage } from "../lib/types";
 import { formatRemainingMinutes, getYesterdayKey } from "../lib/time";
 
@@ -71,11 +71,12 @@ async function updateBadge(): Promise<void> {
 }
 
 async function runTick(): Promise<void> {
-  const before = await loadData();
-  const prevDraftType = before.timer.draft?.type;
+  let prevDraftType: string | undefined;
 
-  await updateData((data) => tickTimer(data));
-  const data = await loadData();
+  const data = await updateData((current) => {
+    prevDraftType = current.timer.draft?.type;
+    return tickTimer(current);
+  });
 
   if (data.timer.mode === "awaiting-confirmation") {
     await playChime();
@@ -100,14 +101,14 @@ async function runTick(): Promise<void> {
 
 async function maybeGenerateMissedDailyReport(): Promise<void> {
   const yesterday = getYesterdayKey();
-  const data = await loadData();
-  if (data.lastDailyReportDate === yesterday) {
-    return;
-  }
 
   try {
-    const next = await handleClientMessage(data, { type: "GENERATE_DAILY_REPORT", date: yesterday });
-    await saveData(next);
+    await updateData(async (data) => {
+      if (data.lastDailyReportDate === yesterday) {
+        return data;
+      }
+      return handleClientMessage(data, { type: "GENERATE_DAILY_REPORT", date: yesterday });
+    });
   } catch (error) {
     console.warn("daily report generation failed", error);
   }

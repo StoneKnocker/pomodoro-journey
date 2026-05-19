@@ -1,6 +1,6 @@
 import { Download, Save, Sparkles } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
-import { loadData, saveData } from "../lib/storage";
+import { loadData } from "../lib/storage";
 import type { AppData, ClientMessage } from "../lib/types";
 import { DEFAULT_DATA } from "../lib/defaults";
 
@@ -28,8 +28,14 @@ export function Options() {
 
   async function saveSettings(event: FormEvent) {
     event.preventDefault();
-    await saveData(data);
-    setStatus("设置已保存");
+    setStatus("");
+    try {
+      const next = await sendMessage({ type: "UPDATE_SETTINGS", settings: data.settings });
+      setData(next);
+      setStatus("设置已保存");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    }
   }
 
   async function generateWeeklyReport() {

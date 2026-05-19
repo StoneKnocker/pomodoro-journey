@@ -1,4 +1,5 @@
-import type { AppData, ClientMessage, PomodoroSession, Report } from "./types";
+import type { AppData, AppSettings, ClientMessage, PomodoroSession, Report } from "./types";
+import { DEFAULT_SETTINGS } from "./defaults";
 import { generateAiText, hasAiConfig } from "./ai";
 import { buildDailySource, buildReportPrompt, buildWeeklySource, createLocalReportContent } from "./reports";
 import { getPreviousNaturalWeek, getYesterdayKey } from "./time";
@@ -158,6 +159,30 @@ async function generateReport(data: AppData, type: "daily" | "weekly", date?: st
   };
 }
 
+function createProject(data: AppData, name: string): AppData {
+  const project = {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    createdAt: new Date().toISOString()
+  };
+  return {
+    ...data,
+    projects: [...data.projects, project]
+  };
+}
+
+function updateSettings(data: AppData, settings: AppSettings): AppData {
+  return {
+    ...data,
+    settings: {
+      ...DEFAULT_SETTINGS,
+      ...settings,
+      ai: { ...DEFAULT_SETTINGS.ai, ...settings.ai },
+      gist: { ...DEFAULT_SETTINGS.gist, ...settings.gist }
+    }
+  };
+}
+
 export async function handleClientMessage(data: AppData, message: ClientMessage): Promise<AppData> {
   switch (message.type) {
     case "START_WORK":
@@ -168,6 +193,10 @@ export async function handleClientMessage(data: AppData, message: ClientMessage)
       return completeWork(data, message.projectId, message.note);
     case "INTERRUPT_TIMER":
       return interruptTimer(data);
+    case "CREATE_PROJECT":
+      return createProject(data, message.name);
+    case "UPDATE_SETTINGS":
+      return updateSettings(data, message.settings);
     case "GENERATE_DAILY_REPORT":
       return generateReport(data, "daily", message.date);
     case "GENERATE_WEEKLY_REPORT":
