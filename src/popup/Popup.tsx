@@ -3,7 +3,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { loadData } from "../lib/storage";
 import type { AppData, ClientMessage, Project } from "../lib/types";
 import { DEFAULT_DATA } from "../lib/defaults";
-import { formatRemainingMinutes, toLocalDateKey } from "../lib/time";
+import { formatTimer, toLocalDateKey } from "../lib/time";
 import { summarizeSessions, getCompletedWorkSessionsForDate } from "../lib/reports";
 
 interface RuntimeResponse {
@@ -118,7 +118,7 @@ export function Popup() {
 
       <section className="timer-panel">
         <div className="timer-value">
-          {data.timer.mode === "awaiting-confirmation" ? "完成待确认" : formatRemainingMinutes(secondsLeft)}
+          {data.timer.mode === "awaiting-confirmation" ? "完成待确认" : formatTimer(secondsLeft)}
         </div>
         <div className="timer-meta">
           {data.timer.mode === "work" && `项目：${projectName(data.timer.draft?.projectId)}`}

@@ -40,3 +40,10 @@ export function formatRemainingMinutes(seconds: number): string {
 
   return String(Math.max(0, Math.floor(seconds / 60)));
 }
+
+export function formatTimer(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(s / 60);
+  const secs = s % 60;
+  return `${minutes}:${String(secs).padStart(2, "0")}`;
+}
