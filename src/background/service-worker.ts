@@ -5,6 +5,48 @@ import { formatRemainingMinutes, getYesterdayKey } from "../lib/time";
 
 const TICK_ALARM = "pomodoro-tick";
 const DAILY_REPORT_ALARM = "pomodoro-daily-report";
+const OFFSCREEN_DOC = "offscreen.html";
+
+let offscreenReady = false;
+
+async function ensureOffscreen(): Promise<void> {
+  if (offscreenReady) {
+    return;
+  }
+
+  const hasDoc = await chrome.offscreen.hasDocument();
+  if (!hasDoc) {
+    // 先注册监听，再创建文档，确保不错过 offscreen-ready 消息
+    const readyPromise = new Promise<void>((resolve) => {
+      const listener = (msg: unknown) => {
+        if (msg === "offscreen-ready") {
+          chrome.runtime.onMessage.removeListener(listener);
+          resolve();
+        }
+      };
+      chrome.runtime.onMessage.addListener(listener);
+    });
+
+    await chrome.offscreen.createDocument({
+      url: OFFSCREEN_DOC,
+      reasons: ["AUDIO_PLAYBACK"],
+      justification: "播放计时结束提示音"
+    });
+
+    await readyPromise;
+  }
+
+  offscreenReady = true;
+}
+
+async function playChime(): Promise<void> {
+  try {
+    await ensureOffscreen();
+    chrome.runtime.sendMessage("play-chime");
+  } catch {
+    // 提示音播放失败不影响主流程
+  }
+}
 
 async function updateBadge(): Promise<void> {
   const data = await loadData();
@@ -29,15 +71,27 @@ async function updateBadge(): Promise<void> {
 }
 
 async function runTick(): Promise<void> {
+  const before = await loadData();
+  const prevDraftType = before.timer.draft?.type;
+
   await updateData((data) => tickTimer(data));
   const data = await loadData();
 
   if (data.timer.mode === "awaiting-confirmation") {
+    await playChime();
     await chrome.notifications.create({
       type: "basic",
-      iconUrl: "icon-128.svg",
+      iconUrl: "icon-128.png",
       title: "番茄钟完成",
       message: "确认项目和细节后保存这次记录。"
+    });
+  } else if (prevDraftType === "break" && data.timer.mode === "idle") {
+    await playChime();
+    await chrome.notifications.create({
+      type: "basic",
+      iconUrl: "icon-128.png",
+      title: "休息结束",
+      message: "休息时间结束，可以开始新的番茄钟了。"
     });
   }
 
@@ -87,6 +141,10 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 chrome.runtime.onMessage.addListener((message: ClientMessage, _sender, sendResponse) => {
+  if (!message || typeof message !== "object" || !("type" in message)) {
+    return;
+  }
+
   updateData((data) => handleClientMessage(data, message))
     .then(async (data) => {
       await updateBadge();
