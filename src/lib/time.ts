@@ -19,6 +19,14 @@ export function getYesterdayKey(now = new Date()): string {
   return toLocalDateKey(addDays(now, -1));
 }
 
+export function getWeekRange(refDate: Date): { start: Date; end: Date } {
+  const today = startOfLocalDay(refDate);
+  const day = today.getDay() || 7;
+  const monday = addDays(today, 1 - day);
+  const sunday = new Date(monday.getTime() + 7 * 24 * 60 * 60 * 1000 - 1);
+  return { start: monday, end: sunday };
+}
+
 export function getPreviousNaturalWeek(now = new Date()): { start: Date; end: Date } {
   const today = startOfLocalDay(now);
   const day = today.getDay() || 7;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDailySource, buildReportPrompt, summarizeSessions } from "../lib/reports";
+import { buildReportPrompt, buildWeeklySource, getCompletedWorkSessionsForDate, summarizeSessions } from "../lib/reports";
 import type { PomodoroSession, Project } from "../lib/types";
 
 const projects: Project[] = [
@@ -48,11 +48,12 @@ const sessions: PomodoroSession[] = [
 ];
 
 describe("reports", () => {
-  it("按确认后的项目汇总，忽略 initialProjectId 和中断记录", () => {
-    const source = buildDailySource(sessions, projects, "2026-05-18");
+  it("getCompletedWorkSessionsForDate 过滤指定日期的已完成工作记录", () => {
+    const daySessions = getCompletedWorkSessionsForDate(sessions, "2026-05-18");
 
-    expect(source.sessions).toHaveLength(2);
-    expect(source.summaries).toEqual([
+    expect(daySessions).toHaveLength(2);
+    const summary = summarizeSessions(daySessions, projects);
+    expect(summary).toEqual([
       {
         projectId: "project-b",
         projectName: "产品设计",
@@ -64,7 +65,7 @@ describe("reports", () => {
   });
 
   it("生成报告 prompt 时不编造空记录", () => {
-    const source = buildDailySource([], projects, "2026-05-18");
+    const source = buildWeeklySource([], projects, new Date("2026-05-11"), new Date("2026-05-17"));
     const prompt = buildReportPrompt(source);
 
     expect(prompt).toContain("没有完成的番茄钟记录");

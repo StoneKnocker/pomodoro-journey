@@ -2,23 +2,13 @@ import { performPull, performSync } from "../lib/gist-sync";
 import { handleClientMessage, tickTimer } from "../lib/messages";
 import { loadData, updateData } from "../lib/storage";
 import type { ClientMessage } from "../lib/types";
-import { formatRemainingMinutes, getYesterdayKey } from "../lib/time";
+import { formatRemainingMinutes } from "../lib/time";
 
 const TICK_ALARM = "pomodoro-tick";
-const DAILY_REPORT_ALARM = "pomodoro-daily-report";
 const OFFSCREEN_DOC = "offscreen.html";
 
 let offscreenReady = false;
 let syncPending = false;
-
-function getNextDailyAlarmTime(): number {
-  const now = new Date();
-  const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 30, 0, 0);
-  if (target.getTime() <= now.getTime()) {
-    target.setDate(target.getDate() + 1);
-  }
-  return target.getTime();
-}
 
 async function ensureOffscreen(): Promise<void> {
   if (offscreenReady) {
@@ -110,38 +100,14 @@ async function runTick(): Promise<void> {
   await updateBadge();
 }
 
-async function maybeGenerateMissedDailyReport(): Promise<void> {
-  const yesterday = getYesterdayKey();
-
-  try {
-    await updateData(async (data) => {
-      if (data.lastDailyReportDate === yesterday) {
-        return data;
-      }
-      return handleClientMessage(data, { type: "GENERATE_DAILY_REPORT", date: yesterday });
-    });
-  } catch (error) {
-    console.warn("daily report generation failed", error);
-  }
-}
-
 chrome.runtime.onInstalled.addListener(async () => {
   await chrome.alarms.create(TICK_ALARM, { periodInMinutes: 1 });
-  await chrome.alarms.create(DAILY_REPORT_ALARM, {
-    when: getNextDailyAlarmTime(),
-    periodInMinutes: 1440
-  });
   await updateBadge();
 });
 
 chrome.runtime.onStartup.addListener(async () => {
   await chrome.alarms.create(TICK_ALARM, { periodInMinutes: 1 });
-  await chrome.alarms.create(DAILY_REPORT_ALARM, {
-    when: getNextDailyAlarmTime(),
-    periodInMinutes: 1440
-  });
   await runTick();
-  await maybeGenerateMissedDailyReport();
 
   try {
     await updateData(performPull);
@@ -153,10 +119,6 @@ chrome.runtime.onStartup.addListener(async () => {
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === TICK_ALARM) {
     await runTick();
-  }
-
-  if (alarm.name === DAILY_REPORT_ALARM) {
-    await maybeGenerateMissedDailyReport();
   }
 });
 

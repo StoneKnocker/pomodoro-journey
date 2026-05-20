@@ -9,7 +9,6 @@ interface RemotePayload {
   projects: Project[];
   sessions: PomodoroSession[];
   settings: Record<string, unknown>;
-  lastDailyReportDate?: string;
   syncRevision: string;
 }
 
@@ -34,7 +33,6 @@ export function serializeForSync(data: AppData): string {
     projects: data.projects,
     sessions: data.sessions.filter((s) => s.type === "work" && s.status === "completed"),
     settings: safeSettings(data.settings),
-    lastDailyReportDate: data.lastDailyReportDate,
     syncRevision: new Date().toISOString()
   });
 }
@@ -136,9 +134,6 @@ function mergeRemote(local: AppData, remote: RemotePayload): AppData {
           ai: local.settings.ai
         }
       : local.settings,
-    lastDailyReportDate: remoteNewer
-      ? (remote.lastDailyReportDate ?? local.lastDailyReportDate)
-      : local.lastDailyReportDate,
     syncRevision: remote.syncRevision,
     lastSyncTime: new Date().toISOString()
   });

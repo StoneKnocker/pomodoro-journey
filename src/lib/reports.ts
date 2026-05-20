@@ -70,24 +70,6 @@ export function summarizeSessions(
   return [...summaries.values()].sort((a, b) => b.minutes - a.minutes);
 }
 
-export function buildDailySource(
-  sessions: PomodoroSession[],
-  projects: Project[],
-  dateKey: string
-): ReportSource {
-  const daySessions = getCompletedWorkSessionsForDate(sessions, dateKey);
-  const [year, month, day] = dateKey.split("-").map(Number);
-  const periodStart = new Date(year, month - 1, day);
-  const periodEnd = new Date(periodStart.getTime() + 24 * 60 * 60 * 1000 - 1);
-  return {
-    type: "daily",
-    periodStart,
-    periodEnd,
-    sessions: daySessions,
-    summaries: summarizeSessions(daySessions, projects)
-  };
-}
-
 export function buildWeeklySource(
   sessions: PomodoroSession[],
   projects: Project[],
@@ -105,14 +87,11 @@ export function buildWeeklySource(
 }
 
 export function buildReportPrompt(source: ReportSource): string {
-  const range =
-    source.type === "daily"
-      ? toLocalDateKey(source.periodStart)
-      : `${toLocalDateKey(source.periodStart)} 至 ${toLocalDateKey(source.periodEnd)}`;
+  const range = `${toLocalDateKey(source.periodStart)} 至 ${toLocalDateKey(source.periodEnd)}`;
   const totalMinutes = source.summaries.reduce((sum, item) => sum + item.minutes, 0);
 
   if (source.sessions.length === 0) {
-    return `请生成一份简短中文${source.type === "daily" ? "日报" : "周报"}。时间范围：${range}。没有完成的番茄钟记录，请如实说明无有效工作记录，并给出一句改进建议。`;
+    return `请生成一份简短中文周报。时间范围：${range}。没有完成的番茄钟记录，请如实说明无有效工作记录，并给出一句改进建议。`;
   }
 
   const lines = source.summaries.flatMap((summary) => [
@@ -121,7 +100,7 @@ export function buildReportPrompt(source: ReportSource): string {
   ]);
 
   return [
-    `请基于以下番茄钟记录生成一份中文${source.type === "daily" ? "工作日报" : "工作周报"}。`,
+    "请基于以下番茄钟记录生成一份中文工作周报。",
     `时间范围：${range}`,
     `总工作时间：${totalMinutes} 分钟`,
     "要求：按项目总结产出，保留具体事项，最后给出下一步建议。不要编造不存在的工作。",

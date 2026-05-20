@@ -2,8 +2,8 @@ import { performSync } from "./gist-sync";
 import type { AppData, AppSettings, ClientMessage, PomodoroSession, Report } from "./types";
 import { DEFAULT_SETTINGS } from "./defaults";
 import { generateAiText, hasAiConfig } from "./ai";
-import { buildDailySource, buildReportPrompt, buildWeeklySource, createLocalReportContent } from "./reports";
-import { getPreviousNaturalWeek, getYesterdayKey } from "./time";
+import { buildReportPrompt, buildWeeklySource, createLocalReportContent } from "./reports";
+import { getPreviousNaturalWeek } from "./time";
 
 export function startWork(data: AppData, projectId: string, now = new Date()): AppData {
   const endsAt = new Date(now.getTime() + data.settings.workMinutes * 60 * 1000);
@@ -133,11 +133,9 @@ export function tickTimer(data: AppData, now = new Date()): AppData {
   };
 }
 
-async function generateReport(data: AppData, type: "daily" | "weekly", date?: string): Promise<AppData> {
-  const source =
-    type === "daily"
-      ? buildDailySource(data.sessions, data.projects, date ?? getYesterdayKey())
-      : buildWeeklySource(data.sessions, data.projects, getPreviousNaturalWeek().start, getPreviousNaturalWeek().end);
+async function generateWeeklyReport(data: AppData): Promise<AppData> {
+  const { start, end } = getPreviousNaturalWeek();
+  const source = buildWeeklySource(data.sessions, data.projects, start, end);
   const prompt = buildReportPrompt(source);
   const content = hasAiConfig(data.settings.ai)
     ? await generateAiText(data.settings.ai, prompt)
@@ -145,7 +143,7 @@ async function generateReport(data: AppData, type: "daily" | "weekly", date?: st
 
   const report: Report = {
     id: crypto.randomUUID(),
-    type,
+    type: "weekly",
     periodStart: source.periodStart.toISOString(),
     periodEnd: source.periodEnd.toISOString(),
     generatedAt: new Date().toISOString(),
@@ -155,8 +153,7 @@ async function generateReport(data: AppData, type: "daily" | "weekly", date?: st
 
   return {
     ...data,
-    reports: [report, ...data.reports],
-    lastDailyReportDate: type === "daily" ? date ?? getYesterdayKey() : data.lastDailyReportDate
+    reports: [report, ...data.reports]
   };
 }
 
@@ -200,9 +197,7 @@ export async function handleClientMessage(data: AppData, message: ClientMessage)
       return updateSettings(data, message.settings);
     case "SYNC_NOW":
       return performSync(data);
-    case "GENERATE_DAILY_REPORT":
-      return generateReport(data, "daily", message.date);
     case "GENERATE_WEEKLY_REPORT":
-      return generateReport(data, "weekly");
+      return generateWeeklyReport(data);
   }
 }

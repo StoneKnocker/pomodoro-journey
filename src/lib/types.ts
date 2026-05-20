@@ -1,7 +1,7 @@
 export type TimerMode = "idle" | "work" | "break" | "awaiting-confirmation";
 export type SessionType = "work" | "break";
 export type SessionStatus = "completed" | "interrupted";
-export type ReportType = "daily" | "weekly";
+export type ReportType = "weekly";
 
 export interface Project {
   id: string;
@@ -63,7 +63,6 @@ export interface GistConfig {
 export interface AppSettings {
   workMinutes: number;
   breakMinutes: number;
-  dailyReportHour: number;
   ai: AiConfig;
   gist: GistConfig;
 }
@@ -74,7 +73,6 @@ export interface AppData {
   reports: Report[];
   timer: TimerState;
   settings: AppSettings;
-  lastDailyReportDate?: string;
   syncRevision?: string;
   lastSyncTime?: string;
 }
@@ -87,5 +85,4 @@ export type ClientMessage =
   | { type: "CREATE_PROJECT"; name: string }
   | { type: "UPDATE_SETTINGS"; settings: AppSettings }
   | { type: "SYNC_NOW" }
-  | { type: "GENERATE_DAILY_REPORT"; date?: string }
   | { type: "GENERATE_WEEKLY_REPORT" };
