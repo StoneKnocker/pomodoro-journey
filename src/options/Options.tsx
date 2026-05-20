@@ -1,4 +1,4 @@
-import { Download, FileText, Save, Sparkles } from "lucide-react";
+import { Download, FileText, RefreshCw, Save, Sparkles } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { loadData } from "../lib/storage";
 import type { AppData, ClientMessage } from "../lib/types";
@@ -45,6 +45,17 @@ export function Options() {
       const next = await sendMessage({ type: "GENERATE_WEEKLY_REPORT" });
       setData(next);
       setStatus("周报已生成");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  async function handleSyncNow() {
+    setStatus("");
+    try {
+      const next = await sendMessage({ type: "SYNC_NOW" });
+      setData(next);
+      setStatus("同步完成");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     }
@@ -159,19 +170,7 @@ export function Options() {
                 })
               }
             />
-            启用预留配置
-          </label>
-          <label>
-            Gist ID
-            <input
-              value={data.settings.gist.gistId}
-              onChange={(event) =>
-                setData({
-                  ...data,
-                  settings: { ...data.settings, gist: { ...data.settings.gist, gistId: event.target.value } }
-                })
-              }
-            />
+            启用 Gist 多设备同步
           </label>
           <label>
             Token
@@ -186,6 +185,29 @@ export function Options() {
               }
             />
           </label>
+          <label>
+            Gist ID
+            <input
+              value={data.settings.gist.gistId}
+              placeholder="留空则自动发现或创建"
+              onChange={(event) =>
+                setData({
+                  ...data,
+                  settings: { ...data.settings, gist: { ...data.settings.gist, gistId: event.target.value } }
+                })
+              }
+            />
+          </label>
+          <div className="sync-status">
+            {data.lastSyncTime ? (
+              <span>上次同步：{new Date(data.lastSyncTime).toLocaleString()}</span>
+            ) : (
+              <span className="sync-status--never">尚未同步</span>
+            )}
+            <button type="button" className="icon-button sync-button" title="立即同步" onClick={handleSyncNow}>
+              <RefreshCw size={15} />
+            </button>
+          </div>
         </section>
 
         <div className="actions">

@@ -1,3 +1,4 @@
+import { performPull, performSync } from "../lib/gist-sync";
 import { handleClientMessage, tickTimer } from "../lib/messages";
 import { loadData, updateData } from "../lib/storage";
 import type { ClientMessage } from "../lib/types";
@@ -8,6 +9,7 @@ const DAILY_REPORT_ALARM = "pomodoro-daily-report";
 const OFFSCREEN_DOC = "offscreen.html";
 
 let offscreenReady = false;
+let syncPending = false;
 
 function getNextDailyAlarmTime(): number {
   const now = new Date();
@@ -140,6 +142,12 @@ chrome.runtime.onStartup.addListener(async () => {
   });
   await runTick();
   await maybeGenerateMissedDailyReport();
+
+  try {
+    await updateData(performPull);
+  } catch (error) {
+    console.warn("Gist sync pull on startup failed", error);
+  }
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
@@ -161,6 +169,19 @@ chrome.runtime.onMessage.addListener((message: ClientMessage, _sender, sendRespo
     .then(async (data) => {
       await updateBadge();
       sendResponse({ ok: true, data });
+
+      if (message.type !== "SYNC_NOW" && !syncPending) {
+        syncPending = true;
+        setTimeout(() => {
+          updateData(performSync)
+            .catch((err) => {
+              console.warn("Gist sync push failed", err);
+            })
+            .finally(() => {
+              syncPending = false;
+            });
+        }, 0);
+      }
     })
     .catch((error) => {
       sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) });

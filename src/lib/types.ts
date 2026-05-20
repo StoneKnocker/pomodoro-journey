@@ -75,6 +75,8 @@ export interface AppData {
   timer: TimerState;
   settings: AppSettings;
   lastDailyReportDate?: string;
+  syncRevision?: string;
+  lastSyncTime?: string;
 }
 
 export type ClientMessage =
@@ -84,5 +86,6 @@ export type ClientMessage =
   | { type: "INTERRUPT_TIMER" }
   | { type: "CREATE_PROJECT"; name: string }
   | { type: "UPDATE_SETTINGS"; settings: AppSettings }
+  | { type: "SYNC_NOW" }
   | { type: "GENERATE_DAILY_REPORT"; date?: string }
   | { type: "GENERATE_WEEKLY_REPORT" };

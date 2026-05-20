@@ -1,3 +1,4 @@
+import { performSync } from "./gist-sync";
 import type { AppData, AppSettings, ClientMessage, PomodoroSession, Report } from "./types";
 import { DEFAULT_SETTINGS } from "./defaults";
 import { generateAiText, hasAiConfig } from "./ai";
@@ -197,6 +198,8 @@ export async function handleClientMessage(data: AppData, message: ClientMessage)
       return createProject(data, message.name);
     case "UPDATE_SETTINGS":
       return updateSettings(data, message.settings);
+    case "SYNC_NOW":
+      return performSync(data);
     case "GENERATE_DAILY_REPORT":
       return generateReport(data, "daily", message.date);
     case "GENERATE_WEEKLY_REPORT":
