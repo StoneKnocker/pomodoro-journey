@@ -42,6 +42,28 @@ h2 {
   font-size: 18px;
 }
 
+.nav-bar {
+  margin-bottom: 24px;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #4b535c;
+  text-decoration: none;
+  padding: 6px 12px;
+  border: 1px solid #d4d6d0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.nav-link:hover {
+  border-color: #0f766e;
+  color: #0f766e;
+}
+
 .settings-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -106,6 +128,12 @@ button {
   color: #ffffff;
 }
 
+.icon-button {
+  width: 36px;
+  min-height: 36px;
+  padding: 0;
+}
+
 .sync-status {
   display: flex;
   align-items: center;
@@ -127,159 +155,6 @@ button {
 .status {
   margin: 18px 0 0;
   color: #0f766e;
-}
-
-.weekly-stats {
-  margin-top: 34px;
-  border-top: 1px solid #d9dad4;
-  padding-top: 18px;
-}
-
-.weekly-stats-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.weekly-stats-header h2 {
-  margin: 0;
-}
-
-.week-nav {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.week-label {
-  font-size: 13px;
-  color: #67707a;
-  min-width: 200px;
-  text-align: center;
-}
-
-.week-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.day-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 14px 8px;
-  border: 1px solid #dedfd8;
-  border-radius: 10px;
-  background: #ffffff;
-  cursor: pointer;
-  text-align: center;
-  font: inherit;
-  min-height: auto;
-}
-
-.day-cell:hover {
-  border-color: #0f766e;
-}
-
-.day-cell--today {
-  border-color: #0f766e;
-  background: #f0fdfa;
-}
-
-.day-cell--selected {
-  border-color: #0f766e;
-  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.2);
-}
-
-.day-name {
-  font-size: 12px;
-  color: #67707a;
-}
-
-.day-date {
-  font-size: 12px;
-  color: #4b535c;
-  font-weight: 500;
-}
-
-.day-minutes {
-  font-size: 14px;
-  font-weight: 600;
-  color: #0f766e;
-}
-
-.day-count {
-  font-size: 11px;
-  color: #67707a;
-}
-
-.day-empty {
-  font-size: 13px;
-  color: #b0b5bc;
-  padding-top: 4px;
-}
-
-.day-detail {
-  background: #ffffff;
-  border: 1px solid #dedfd8;
-  border-radius: 10px;
-  padding: 18px;
-}
-
-.day-detail h3 {
-  margin: 0 0 14px;
-  font-size: 15px;
-  color: #4b535c;
-}
-
-.day-detail .empty {
-  margin: 0;
-  color: #67707a;
-  font-size: 14px;
-}
-
-.day-detail ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.day-detail li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f1ed;
-}
-
-.day-detail li:last-child {
-  border-bottom: none;
-}
-
-.day-detail li span {
-  font-size: 14px;
-}
-
-.day-detail li strong {
-  font-size: 13px;
-  color: #0f766e;
-}
-
-.report-preview {
-  margin-top: 34px;
-}
-
-pre {
-  white-space: pre-wrap;
-  line-height: 1.6;
-  background: #ffffff;
-  border: 1px solid #dedfd8;
-  border-radius: 8px;
-  padding: 16px;
 }
 
 @media (max-width: 760px) {
