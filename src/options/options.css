@@ -42,26 +42,48 @@ h2 {
   font-size: 18px;
 }
 
-.nav-bar {
+.tabs {
+  display: flex;
+  gap: 0;
   margin-bottom: 24px;
+  border: 1px solid #d4d6d0;
+  border-radius: 8px;
+  overflow: hidden;
+  width: fit-content;
 }
 
-.nav-link {
+.tab {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 13px;
   color: #4b535c;
   text-decoration: none;
-  padding: 6px 12px;
-  border: 1px solid #d4d6d0;
-  border-radius: 8px;
+  padding: 7px 16px;
   background: #ffffff;
+  border: none;
+  border-right: 1px solid #d4d6d0;
+  cursor: pointer;
 }
 
-.nav-link:hover {
-  border-color: #0f766e;
+.tab:last-child {
+  border-right: none;
+}
+
+.tab:hover {
+  background: #f0fdfa;
   color: #0f766e;
+}
+
+.tab--active {
+  background: #0f766e;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.tab--active:hover {
+  background: #0f766e;
+  color: #ffffff;
 }
 
 .settings-grid {

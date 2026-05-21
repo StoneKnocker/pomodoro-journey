@@ -1,15 +1,30 @@
-import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
+import { BarChart3, ChevronLeft, ChevronRight, Settings, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { loadData } from "../lib/storage";
-import type { AppData } from "../lib/types";
+import type { AppData, ClientMessage } from "../lib/types";
 import { DEFAULT_DATA } from "../lib/defaults";
 import { addDays, getWeekRange, toLocalDateKey } from "../lib/time";
 import { getCompletedWorkSessionsForDate, summarizeSessions } from "../lib/reports";
+
+interface RuntimeResponse {
+  ok: boolean;
+  data?: AppData;
+  error?: string;
+}
+
+async function sendMessage(message: ClientMessage): Promise<AppData> {
+  const response = (await chrome.runtime.sendMessage(message)) as RuntimeResponse;
+  if (!response.ok || !response.data) {
+    throw new Error(response.error ?? "操作失败");
+  }
+  return response.data;
+}
 
 export function Stats() {
   const [data, setData] = useState<AppData>(DEFAULT_DATA);
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
     loadData().then((loaded) => {
@@ -17,6 +32,17 @@ export function Stats() {
       setSelectedDay(toLocalDateKey(new Date()));
     });
   }, []);
+
+  async function generateWeeklyReport() {
+    setStatus("");
+    try {
+      const next = await sendMessage({ type: "GENERATE_WEEKLY_REPORT" });
+      setData(next);
+      setStatus("周报已生成");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    }
+  }
 
   const weekRange = useMemo(() => {
     const ref = addDays(new Date(), weekOffset * 7);
@@ -53,11 +79,15 @@ export function Stats() {
         <h1>统计</h1>
       </header>
 
-      <nav className="nav-bar">
-        <a href="options.html" className="nav-link">
+      <nav className="tabs">
+        <a href="options.html" className="tab">
           <Settings size={15} />
           设置
         </a>
+        <span className="tab tab--active">
+          <BarChart3 size={15} />
+          统计
+        </span>
       </nav>
 
       <section className="weekly-stats">
@@ -128,8 +158,15 @@ export function Stats() {
       </section>
 
       <section className="report-preview">
-        <h2>最新报告</h2>
+        <div className="report-header">
+          <h2>最新报告</h2>
+          <button type="button" onClick={generateWeeklyReport}>
+            <Sparkles size={18} />
+            生成上周周报
+          </button>
+        </div>
         {latestReport ? <pre>{latestReport.content}</pre> : <p>还没有报告。</p>}
+        {status && <p className="status">{status}</p>}
       </section>
     </main>
   );

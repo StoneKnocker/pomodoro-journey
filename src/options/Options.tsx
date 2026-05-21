@@ -1,4 +1,4 @@
-import { BarChart3, Download, RefreshCw, Save, Sparkles } from "lucide-react";
+import { BarChart3, Download, RefreshCw, Save, Settings } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { loadData } from "../lib/storage";
 import type { AppData, ClientMessage } from "../lib/types";
@@ -38,17 +38,6 @@ export function Options() {
     }
   }
 
-  async function generateWeeklyReport() {
-    setStatus("");
-    try {
-      const next = await sendMessage({ type: "GENERATE_WEEKLY_REPORT" });
-      setData(next);
-      setStatus("周报已生成");
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : String(error));
-    }
-  }
-
   async function handleSyncNow() {
     setStatus("");
     try {
@@ -67,8 +56,12 @@ export function Options() {
         <h1>设置</h1>
       </header>
 
-      <nav className="nav-bar">
-        <a href="stats.html" className="nav-link">
+      <nav className="tabs">
+        <span className="tab tab--active">
+          <Settings size={15} />
+          设置
+        </span>
+        <a href="stats.html" className="tab">
           <BarChart3 size={15} />
           统计
         </a>
@@ -205,10 +198,6 @@ export function Options() {
           <button className="primary-button" type="submit">
             <Save size={18} />
             保存设置
-          </button>
-          <button type="button" onClick={generateWeeklyReport}>
-            <Sparkles size={18} />
-            生成上周周报
           </button>
           <button type="button" onClick={() => navigator.clipboard.writeText(JSON.stringify(data, null, 2))}>
             <Download size={18} />

@@ -111,6 +111,14 @@ export function Popup() {
     return data.projects.find((project) => project.id === projectId)?.name ?? "未选择项目";
   }
 
+  async function confirmWork() {
+    await runAction(async () => {
+      const next = await sendMessage({ type: "COMPLETE_WORK", projectId: confirmProjectId, note });
+      setNote("");
+      return next;
+    });
+  }
+
   const canStart = Boolean(selectedProjectId) && data.timer.mode === "idle";
 
   return (
@@ -154,18 +162,15 @@ export function Popup() {
             <textarea
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              placeholder="记录这次番茄钟完成了什么，可留空"
+              onKeyDown={(e) => {
+                if (e.ctrlKey && e.key === "Enter") confirmWork();
+              }}
+              placeholder="记录这次番茄钟完成了什么，可留空 (Ctrl+Enter 提交)"
             />
           </label>
           <button
             className="primary-button"
-            onClick={() =>
-              runAction(async () => {
-                const next = await sendMessage({ type: "COMPLETE_WORK", projectId: confirmProjectId, note });
-                setNote("");
-                return next;
-              })
-            }
+            onClick={confirmWork}
           >
             <Check size={17} />
             保存记录
