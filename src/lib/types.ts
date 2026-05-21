@@ -65,6 +65,7 @@ export interface AppSettings {
   breakMinutes: number;
   ai: AiConfig;
   gist: GistConfig;
+  language: string;
 }
 
 export interface AppData {

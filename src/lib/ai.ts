@@ -1,4 +1,6 @@
 import type { AiConfig } from "./types";
+import type { Language } from "./i18n";
+import { reportSystemPrompt } from "./i18n";
 
 interface ChatCompletionResponse {
   choices?: Array<{
@@ -12,9 +14,9 @@ export function hasAiConfig(config: AiConfig): boolean {
   return Boolean(config.baseUrl.trim() && config.apiKey.trim() && config.model.trim());
 }
 
-export async function generateAiText(config: AiConfig, prompt: string): Promise<string> {
+export async function generateAiText(config: AiConfig, prompt: string, lang: Language): Promise<string> {
   if (!hasAiConfig(config)) {
-    throw new Error("AI 配置不完整");
+    throw new Error("AI configuration is incomplete");
   }
 
   const response = await fetch(`${config.baseUrl.replace(/\/$/, "")}/chat/completions`, {
@@ -28,7 +30,7 @@ export async function generateAiText(config: AiConfig, prompt: string): Promise<
       messages: [
         {
           role: "system",
-          content: "你是一个严谨的工作记录助手，只基于用户提供的番茄钟记录总结。"
+          content: reportSystemPrompt(lang)
         },
         {
           role: "user",
@@ -40,13 +42,13 @@ export async function generateAiText(config: AiConfig, prompt: string): Promise<
   });
 
   if (!response.ok) {
-    throw new Error(`AI 请求失败：${response.status}`);
+    throw new Error(`AI request failed: ${response.status}`);
   }
 
   const data = (await response.json()) as ChatCompletionResponse;
   const content = data.choices?.[0]?.message?.content?.trim();
   if (!content) {
-    throw new Error("AI 返回内容为空");
+    throw new Error("AI returned empty content");
   }
   return content;
 }

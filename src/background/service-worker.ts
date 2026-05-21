@@ -3,6 +3,7 @@ import { handleClientMessage, tickTimer } from "../lib/messages";
 import { loadData, updateData } from "../lib/storage";
 import type { ClientMessage } from "../lib/types";
 import { formatRemainingMinutes } from "../lib/time";
+import { t, type Language } from "../lib/i18n";
 
 const TICK_ALARM = "pomodoro-tick";
 const OFFSCREEN_DOC = "offscreen.html";
@@ -17,7 +18,6 @@ async function ensureOffscreen(): Promise<void> {
 
   const hasDoc = await chrome.offscreen.hasDocument();
   if (!hasDoc) {
-    // 先注册监听，再创建文档，确保不错过 offscreen-ready 消息
     const readyPromise = new Promise<void>((resolve) => {
       const listener = (msg: unknown) => {
         if (msg === "offscreen-ready") {
@@ -31,7 +31,7 @@ async function ensureOffscreen(): Promise<void> {
     await chrome.offscreen.createDocument({
       url: OFFSCREEN_DOC,
       reasons: ["AUDIO_PLAYBACK"],
-      justification: "播放计时结束提示音"
+      justification: "Play timer chime"
     });
 
     await readyPromise;
@@ -45,7 +45,7 @@ async function playChime(): Promise<void> {
     await ensureOffscreen();
     chrome.runtime.sendMessage("play-chime");
   } catch {
-    // 提示音播放失败不影响主流程
+    // Ignore audio playback failures
   }
 }
 
@@ -79,21 +79,23 @@ async function runTick(): Promise<void> {
     return tickTimer(current);
   });
 
+  const lang = data.settings.language as Language;
+
   if (data.timer.mode === "awaiting-confirmation") {
     await playChime();
     await chrome.notifications.create({
       type: "basic",
       iconUrl: "icon-128.png",
-      title: "番茄钟完成",
-      message: "确认项目和细节后保存这次记录。"
+      title: t("notif.workDoneTitle", lang),
+      message: t("notif.workDoneMsg", lang)
     });
   } else if (prevDraftType === "break" && data.timer.mode === "idle") {
     await playChime();
     await chrome.notifications.create({
       type: "basic",
       iconUrl: "icon-128.png",
-      title: "休息结束",
-      message: "休息时间结束，可以开始新的番茄钟了。"
+      title: t("notif.breakDoneTitle", lang),
+      message: t("notif.breakDoneMsg", lang)
     });
   }
 

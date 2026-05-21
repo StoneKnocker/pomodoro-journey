@@ -12,7 +12,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     token: "",
     gistId: "",
     enabled: false
-  }
+  },
+  language: "en"
 };
 
 export const DEFAULT_TIMER: TimerState = {

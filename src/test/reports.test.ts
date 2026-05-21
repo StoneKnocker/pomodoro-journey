@@ -52,7 +52,7 @@ describe("reports", () => {
     const daySessions = getCompletedWorkSessionsForDate(sessions, "2026-05-18");
 
     expect(daySessions).toHaveLength(2);
-    const summary = summarizeSessions(daySessions, projects);
+    const summary = summarizeSessions(daySessions, projects, "zh-CN");
     expect(summary).toEqual([
       {
         projectId: "project-b",
@@ -65,8 +65,8 @@ describe("reports", () => {
   });
 
   it("生成报告 prompt 时不编造空记录", () => {
-    const source = buildWeeklySource([], projects, new Date("2026-05-11"), new Date("2026-05-17"));
-    const prompt = buildReportPrompt(source);
+    const source = buildWeeklySource([], projects, new Date("2026-05-11"), new Date("2026-05-17"), "zh-CN");
+    const prompt = buildReportPrompt(source, "zh-CN");
 
     expect(prompt).toContain("没有完成的番茄钟记录");
   });
@@ -84,7 +84,8 @@ describe("reports", () => {
           status: "completed"
         }
       ],
-      projects
+      projects,
+      "zh-CN"
     );
 
     expect(summary[0].projectName).toBe("未命名项目");

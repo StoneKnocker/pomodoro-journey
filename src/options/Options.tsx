@@ -3,6 +3,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { loadData } from "../lib/storage";
 import type { AppData, ClientMessage } from "../lib/types";
 import { DEFAULT_DATA } from "../lib/defaults";
+import { t, type Language } from "../lib/i18n";
 
 interface RuntimeResponse {
   ok: boolean;
@@ -13,7 +14,7 @@ interface RuntimeResponse {
 async function sendMessage(message: ClientMessage): Promise<AppData> {
   const response = (await chrome.runtime.sendMessage(message)) as RuntimeResponse;
   if (!response.ok || !response.data) {
-    throw new Error(response.error ?? "操作失败");
+    throw new Error(response.error ?? "Operation failed");
   }
   return response.data;
 }
@@ -26,13 +27,16 @@ export function Options() {
     loadData().then(setData);
   }, []);
 
+  const lang = data.settings.language as Language;
+  const _ = (key: string, params?: Record<string, string | number>) => t(key, lang, params);
+
   async function saveSettings(event: FormEvent) {
     event.preventDefault();
     setStatus("");
     try {
       const next = await sendMessage({ type: "UPDATE_SETTINGS", settings: data.settings });
       setData(next);
-      setStatus("设置已保存");
+      setStatus(_("options.settingsSaved"));
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     }
@@ -43,7 +47,7 @@ export function Options() {
     try {
       const next = await sendMessage({ type: "SYNC_NOW" });
       setData(next);
-      setStatus("同步完成");
+      setStatus(_("options.syncComplete"));
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
     }
@@ -53,25 +57,25 @@ export function Options() {
     <main className="options-shell">
       <header>
         <p>Pomodoro Journey</p>
-        <h1>设置</h1>
+        <h1>{_("options.title")}</h1>
       </header>
 
       <nav className="tabs">
         <span className="tab tab--active">
           <Settings size={15} />
-          设置
+          {_("options.title")}
         </span>
         <a href="stats.html" className="tab">
           <BarChart3 size={15} />
-          统计
+          {_("options.stats")}
         </a>
       </nav>
 
       <form onSubmit={saveSettings} className="settings-grid">
         <section>
-          <h2>计时</h2>
+          <h2>{_("options.timer")}</h2>
           <label>
-            工作分钟
+            {_("options.workMinutes")}
             <input
               type="number"
               min="1"
@@ -85,7 +89,7 @@ export function Options() {
             />
           </label>
           <label>
-            休息分钟
+            {_("options.breakMinutes")}
             <input
               type="number"
               min="1"
@@ -97,6 +101,21 @@ export function Options() {
                 })
               }
             />
+          </label>
+          <label>
+            {_("options.language")}
+            <select
+              value={data.settings.language}
+              onChange={(event) =>
+                setData({
+                  ...data,
+                  settings: { ...data.settings, language: event.target.value }
+                })
+              }
+            >
+              <option value="en">English</option>
+              <option value="zh-CN">中文</option>
+            </select>
           </label>
         </section>
 
@@ -128,7 +147,7 @@ export function Options() {
             />
           </label>
           <label>
-            模型
+            {_("options.model")}
             <input
               value={data.settings.ai.model}
               onChange={(event) =>
@@ -142,7 +161,7 @@ export function Options() {
         </section>
 
         <section>
-          <h2>Gist 同步</h2>
+          <h2>Gist Sync</h2>
           <label className="toggle">
             <input
               type="checkbox"
@@ -154,7 +173,7 @@ export function Options() {
                 })
               }
             />
-            启用 Gist 多设备同步
+            {_("options.enableGist")}
           </label>
           <label>
             Token
@@ -173,7 +192,7 @@ export function Options() {
             Gist ID
             <input
               value={data.settings.gist.gistId}
-              placeholder="留空则自动发现或创建"
+              placeholder={_("options.gistIdPlaceholder")}
               onChange={(event) =>
                 setData({
                   ...data,
@@ -184,11 +203,11 @@ export function Options() {
           </label>
           <div className="sync-status">
             {data.lastSyncTime ? (
-              <span>上次同步：{new Date(data.lastSyncTime).toLocaleString()}</span>
+              <span>{_("options.lastSync")}{new Date(data.lastSyncTime).toLocaleString()}</span>
             ) : (
-              <span className="sync-status--never">尚未同步</span>
+              <span className="sync-status--never">{_("options.neverSynced")}</span>
             )}
-            <button type="button" className="icon-button sync-button" title="立即同步" onClick={handleSyncNow}>
+            <button type="button" className="icon-button sync-button" title={_("options.syncNow")} onClick={handleSyncNow}>
               <RefreshCw size={15} />
             </button>
           </div>
@@ -197,11 +216,11 @@ export function Options() {
         <div className="actions">
           <button className="primary-button" type="submit">
             <Save size={18} />
-            保存设置
+            {_("options.saveSettings")}
           </button>
           <button type="button" onClick={() => navigator.clipboard.writeText(JSON.stringify(data, null, 2))}>
             <Download size={18} />
-            复制数据
+            {_("options.copyData")}
           </button>
         </div>
       </form>

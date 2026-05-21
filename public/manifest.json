@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Pomodoro Journey",
-  "description": "记录番茄钟、整理每日工作内容，并用 AI 生成日报和周报。",
+  "description": "__MSG_appDesc__",
+  "default_locale": "en",
   "version": "0.1.0",
   "action": {
     "default_title": "Pomodoro Journey",

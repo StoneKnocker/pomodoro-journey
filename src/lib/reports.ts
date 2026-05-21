@@ -1,5 +1,7 @@
 import type { PomodoroSession, Project, ReportType } from "./types";
 import { isDateInRange, startOfLocalDay, toLocalDateKey } from "./time";
+import type { Language } from "./i18n";
+import { reportPrompt, reportEmptyPrompt, reportLocalHeader, reportLocalItem, t } from "./i18n";
 
 export interface ProjectSummary {
   projectId: string;
@@ -43,7 +45,8 @@ export function getCompletedWorkSessionsForDate(
 
 export function summarizeSessions(
   sessions: PomodoroSession[],
-  projects: Project[]
+  projects: Project[],
+  lang?: Language
 ): ProjectSummary[] {
   const projectNames = new Map(projects.map((project) => [project.id, project.name]));
   const summaries = new Map<string, ProjectSummary>();
@@ -53,7 +56,7 @@ export function summarizeSessions(
       summaries.get(session.projectId) ??
       {
         projectId: session.projectId,
-        projectName: projectNames.get(session.projectId) ?? "未命名项目",
+        projectName: projectNames.get(session.projectId) ?? t("project.unnamed", lang ?? "en"),
         minutes: 0,
         count: 0,
         notes: []
@@ -74,7 +77,8 @@ export function buildWeeklySource(
   sessions: PomodoroSession[],
   projects: Project[],
   start: Date,
-  end: Date
+  end: Date,
+  lang?: Language
 ): ReportSource {
   const weekSessions = getCompletedWorkSessionsInRange(sessions, start, end);
   return {
@@ -82,44 +86,39 @@ export function buildWeeklySource(
     periodStart: start,
     periodEnd: end,
     sessions: weekSessions,
-    summaries: summarizeSessions(weekSessions, projects)
+    summaries: summarizeSessions(weekSessions, projects, lang)
   };
 }
 
-export function buildReportPrompt(source: ReportSource): string {
-  const range = `${toLocalDateKey(source.periodStart)} 至 ${toLocalDateKey(source.periodEnd)}`;
+export function buildReportPrompt(source: ReportSource, lang: Language): string {
+  const range = `${toLocalDateKey(source.periodStart)} — ${toLocalDateKey(source.periodEnd)}`;
   const totalMinutes = source.summaries.reduce((sum, item) => sum + item.minutes, 0);
 
   if (source.sessions.length === 0) {
-    return `请生成一份简短中文周报。时间范围：${range}。没有完成的番茄钟记录，请如实说明无有效工作记录，并给出一句改进建议。`;
+    return reportEmptyPrompt(lang, range);
   }
 
   const lines = source.summaries.flatMap((summary) => [
-    `项目：${summary.projectName}，${summary.minutes} 分钟，${summary.count} 个番茄钟。`,
+    lang === "zh-CN"
+      ? `项目：${summary.projectName}，${summary.minutes} 分钟，${summary.count} 个番茄钟。`
+      : `Project: ${summary.projectName}, ${summary.minutes} min, ${summary.count} pomodoros.`,
     ...summary.notes.map((note) => `- ${note}`)
   ]);
 
-  return [
-    "请基于以下番茄钟记录生成一份中文工作周报。",
-    `时间范围：${range}`,
-    `总工作时间：${totalMinutes} 分钟`,
-    "要求：按项目总结产出，保留具体事项，最后给出下一步建议。不要编造不存在的工作。",
-    "记录：",
-    ...lines
-  ].join("\n");
+  return reportPrompt(lang, range, totalMinutes, lines.join("\n"));
 }
 
-export function createLocalReportContent(source: ReportSource): string {
+export function createLocalReportContent(source: ReportSource, lang: Language): string {
   const totalMinutes = source.summaries.reduce((sum, item) => sum + item.minutes, 0);
   if (source.sessions.length === 0) {
-    return "没有完成的番茄钟记录。";
+    return t("report.noSessions", lang);
   }
 
   return [
-    `总工作时间：${totalMinutes} 分钟`,
+    reportLocalHeader(lang, totalMinutes),
     ...source.summaries.map((summary) => {
       const notes = summary.notes.length > 0 ? `\n${summary.notes.map((note) => `- ${note}`).join("\n")}` : "";
-      return `${summary.projectName}：${summary.minutes} 分钟，${summary.count} 个番茄钟${notes}`;
+      return reportLocalItem(lang, summary.projectName, summary.minutes, summary.count, notes);
     })
   ].join("\n\n");
 }

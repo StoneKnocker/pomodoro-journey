@@ -61,7 +61,7 @@ async function findOrCreateGist(token: string): Promise<string> {
   });
 
   if (!createRes.ok) {
-    throw new Error(`创建 Gist 失败：${createRes.status}`);
+    throw new Error(`Failed to create Gist: ${createRes.status}`);
   }
 
   const created = (await createRes.json()) as { id: string };
@@ -79,7 +79,7 @@ async function pushToGist(token: string, gistId: string, content: string): Promi
   });
 
   if (!res.ok) {
-    throw new Error(`更新 Gist 失败：${res.status}`);
+    throw new Error(`Failed to update Gist: ${res.status}`);
   }
 
   return new Date().toISOString();
@@ -92,7 +92,7 @@ async function pullFromGist(token: string, gistId: string): Promise<{ payload: R
 
   if (!res.ok) {
     if (res.status === 404) return null;
-    throw new Error(`读取 Gist 失败：${res.status}`);
+    throw new Error(`Failed to read Gist: ${res.status}`);
   }
 
   const gist = (await res.json()) as {

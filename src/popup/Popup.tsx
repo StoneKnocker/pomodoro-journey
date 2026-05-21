@@ -5,6 +5,7 @@ import type { AppData, ClientMessage, PomodoroSession, Project } from "../lib/ty
 import { DEFAULT_DATA } from "../lib/defaults";
 import { formatTimer, toLocalDateKey } from "../lib/time";
 import { summarizeSessions, getCompletedWorkSessionsForDate } from "../lib/reports";
+import { t, type Language } from "../lib/i18n";
 
 interface RuntimeResponse {
   ok: boolean;
@@ -15,7 +16,7 @@ interface RuntimeResponse {
 async function sendMessage(message: ClientMessage): Promise<AppData> {
   const response = (await chrome.runtime.sendMessage(message)) as RuntimeResponse;
   if (!response.ok || !response.data) {
-    throw new Error(response.error ?? "操作失败");
+    throw new Error(response.error ?? "Operation failed");
   }
   return response.data;
 }
@@ -68,6 +69,9 @@ export function Popup() {
     }
   }, [data.timer.mode, data.timer.draft?.projectId, selectedProjectId]);
 
+  const lang = data.settings.language as Language;
+  const _ = (key: string, params?: Record<string, string | number>) => t(key, lang, params);
+
   const activeProjects = useMemo(() => data.projects.filter((project) => !project.archived), [data.projects]);
   const todaySessions = useMemo(
     () => getCompletedWorkSessionsForDate(data.sessions, toLocalDateKey(new Date())),
@@ -108,7 +112,7 @@ export function Popup() {
   }
 
   function projectName(projectId?: string): string {
-    return data.projects.find((project) => project.id === projectId)?.name ?? "未选择项目";
+    return data.projects.find((project) => project.id === projectId)?.name ?? _("project.unselected");
   }
 
   async function confirmWork() {
@@ -126,29 +130,29 @@ export function Popup() {
       <header className="topbar">
         <div>
           <p className="eyebrow">Pomodoro Journey</p>
-          <h1>{data.timer.mode === "work" ? "专注中" : data.timer.mode === "break" ? "休息中" : "今日工作"}</h1>
+          <h1>{data.timer.mode === "work" ? _("popup.focusing") : data.timer.mode === "break" ? _("popup.onBreak") : _("popup.todayWork")}</h1>
         </div>
-        <button className="icon-button" title="设置" onClick={() => chrome.runtime.openOptionsPage()}>
+        <button className="icon-button" title={_("popup.settings")} onClick={() => chrome.runtime.openOptionsPage()}>
           <Settings size={18} />
         </button>
       </header>
 
       <section className="timer-panel">
         <div className="timer-value">
-          {data.timer.mode === "awaiting-confirmation" ? "完成待确认" : formatTimer(secondsLeft)}
+          {data.timer.mode === "awaiting-confirmation" ? _("popup.awaitingConfirm") : formatTimer(secondsLeft)}
         </div>
         <div className="timer-meta">
-          {data.timer.mode === "work" && `项目：${projectName(data.timer.draft?.projectId)}`}
-          {data.timer.mode === "break" && "休息结束后可开启下一个番茄钟"}
-          {data.timer.mode === "idle" && `${totalMinutes} 分钟已完成`}
-          {data.timer.mode === "awaiting-confirmation" && "修正项目和细节后保存"}
+          {data.timer.mode === "work" && `${_("popup.projectColon")}${projectName(data.timer.draft?.projectId)}`}
+          {data.timer.mode === "break" && _("popup.breakHint")}
+          {data.timer.mode === "idle" && _("popup.idleHint", { n: totalMinutes })}
+          {data.timer.mode === "awaiting-confirmation" && _("popup.confirmHint")}
         </div>
       </section>
 
       {data.timer.mode === "awaiting-confirmation" ? (
         <section className="confirm-area">
           <label>
-            项目
+            {_("popup.project")}
             <select value={confirmProjectId} onChange={(event) => setConfirmProjectId(event.target.value)}>
               {activeProjects.map((project) => (
                 <option key={project.id} value={project.id}>
@@ -158,14 +162,14 @@ export function Popup() {
             </select>
           </label>
           <label>
-            细节
+            {_("popup.detail")}
             <textarea
               value={note}
               onChange={(event) => setNote(event.target.value)}
               onKeyDown={(e) => {
                 if (e.ctrlKey && e.key === "Enter") confirmWork();
               }}
-              placeholder="记录这次番茄钟完成了什么，可留空 (Ctrl+Enter 提交)"
+              placeholder={_("popup.notePlaceholder")}
             />
           </label>
           <button
@@ -173,15 +177,15 @@ export function Popup() {
             onClick={confirmWork}
           >
             <Check size={17} />
-            保存记录
+            {_("popup.saveRecord")}
           </button>
         </section>
       ) : (
         <section className="action-area">
           <label>
-            项目
+            {_("popup.project")}
             <select value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)}>
-              <option value="">选择项目</option>
+              <option value="">{_("popup.selectProject")}</option>
               {activeProjects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.name}
@@ -194,9 +198,9 @@ export function Popup() {
             <input
               value={newProjectName}
               onChange={(event) => setNewProjectName(event.target.value)}
-              placeholder="新项目"
+              placeholder={_("popup.newProject")}
             />
-            <button className="icon-button" title="新增项目" type="submit">
+            <button className="icon-button" title={_("popup.addProject")} type="submit">
               <CirclePlus size={18} />
             </button>
           </form>
@@ -208,21 +212,21 @@ export function Popup() {
               onClick={() => runAction(() => sendMessage({ type: "START_WORK", projectId: selectedProjectId }))}
             >
               <Play size={17} />
-              开始
+              {_("popup.start")}
             </button>
             <button
               disabled={data.timer.mode !== "idle"}
               onClick={() => runAction(() => sendMessage({ type: "START_BREAK" }))}
             >
               <Coffee size={17} />
-              休息
+              {_("popup.break")}
             </button>
             <button
               disabled={data.timer.mode === "idle"}
               onClick={() => runAction(() => sendMessage({ type: "INTERRUPT_TIMER" }))}
             >
               {data.timer.mode === "work" ? <Square size={17} /> : <Pause size={17} />}
-              中断
+              {_("popup.interrupt")}
             </button>
           </div>
         </section>
@@ -230,17 +234,17 @@ export function Popup() {
 
       <section className="summary">
         <div className="summary-header">
-          <span>今日统计</span>
-          <strong>{totalMinutes} 分钟</strong>
+          <span>{_("popup.todayStats")}</span>
+          <strong>{totalMinutes} {_("popup.minutes")}</strong>
         </div>
         {todaySummaries.length === 0 ? (
-          <p className="empty">还没有完成的番茄钟。</p>
+          <p className="empty">{_("popup.noSessions")}</p>
         ) : (
           <ul>
             {todaySummaries.map((summary) => (
               <li key={summary.projectId}>
                 <span>{summary.projectName}</span>
-                <strong>{summary.minutes} 分钟</strong>
+                <strong>{summary.minutes} {_("popup.minutes")}</strong>
               </li>
             ))}
           </ul>

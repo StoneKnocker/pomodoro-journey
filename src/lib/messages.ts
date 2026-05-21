@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS } from "./defaults";
 import { generateAiText, hasAiConfig } from "./ai";
 import { buildReportPrompt, buildWeeklySource, createLocalReportContent } from "./reports";
 import { getPreviousNaturalWeek } from "./time";
+import type { Language } from "./i18n";
 
 export function startWork(data: AppData, projectId: string, now = new Date()): AppData {
   const endsAt = new Date(now.getTime() + data.settings.workMinutes * 60 * 1000);
@@ -134,12 +135,13 @@ export function tickTimer(data: AppData, now = new Date()): AppData {
 }
 
 async function generateWeeklyReport(data: AppData): Promise<AppData> {
+  const lang = data.settings.language as Language;
   const { start, end } = getPreviousNaturalWeek();
-  const source = buildWeeklySource(data.sessions, data.projects, start, end);
-  const prompt = buildReportPrompt(source);
+  const source = buildWeeklySource(data.sessions, data.projects, start, end, lang);
+  const prompt = buildReportPrompt(source, lang);
   const content = hasAiConfig(data.settings.ai)
-    ? await generateAiText(data.settings.ai, prompt)
-    : createLocalReportContent(source);
+    ? await generateAiText(data.settings.ai, prompt, lang)
+    : createLocalReportContent(source, lang);
 
   const report: Report = {
     id: crypto.randomUUID(),
