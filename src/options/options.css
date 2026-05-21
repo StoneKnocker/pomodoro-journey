@@ -106,13 +106,15 @@ label {
   font-size: 13px;
 }
 
-input {
+input,
+select {
   width: 100%;
   border: 1px solid #d4d6d0;
   border-radius: 8px;
   background: #ffffff;
   color: #17191d;
   padding: 10px 11px;
+  font: inherit;
 }
 
 .toggle {
