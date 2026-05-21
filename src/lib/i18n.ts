@@ -118,7 +118,7 @@ export function reportPrompt(lang: Language, range: string, totalMinutes: number
         "请基于以下番茄钟记录生成一份中文工作周报。",
         `时间范围：${range}`,
         `总工作时间：${totalMinutes} 分钟`,
-        "要求：按项目总结产出，保留具体事项，最后给出下一步建议。不要编造不存在的工作。",
+        "要求：按项目统计番茄钟数量和详情，不要编造不存在的工作。",
         "记录：",
         summariesText
       ].join("\n")
@@ -126,7 +126,7 @@ export function reportPrompt(lang: Language, range: string, totalMinutes: number
         "Generate an English weekly work report based on the following pomodoro records.",
         `Period: ${range}`,
         `Total work time: ${totalMinutes} minutes`,
-        "Requirements: summarize output by project, keep specific items, and give next-step recommendations. Do not fabricate work.",
+        "Requirements: summarize pomodoro counts and details by project. Do not fabricate work.",
         "Records:",
         summariesText
       ].join("\n");
@@ -134,8 +134,8 @@ export function reportPrompt(lang: Language, range: string, totalMinutes: number
 
 export function reportEmptyPrompt(lang: Language, range: string): string {
   return lang === "zh-CN"
-    ? `请生成一份简短中文周报。时间范围：${range}。没有完成的番茄钟记录，请如实说明无有效工作记录，并给出一句改进建议。`
-    : `Generate a short English weekly report. Period: ${range}. No completed pomodoro records. Honestly state there are no valid work records and give one improvement suggestion.`;
+    ? `请生成一份简短中文周报。时间范围：${range}。没有完成的番茄钟记录。`
+    : `Generate a short English weekly report. Period: ${range}. No completed pomodoro records.`;
 }
 
 export function reportLocalHeader(lang: Language, totalMinutes: number): string {
