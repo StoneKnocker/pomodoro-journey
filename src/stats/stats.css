@@ -159,6 +159,11 @@
   font-size: 13px;
 }
 
+.report-header button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 pre {
   white-space: pre-wrap;
   line-height: 1.6;

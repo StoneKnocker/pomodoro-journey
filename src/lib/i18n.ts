@@ -57,6 +57,7 @@ const dict: Record<string, Record<Language, string>> = {
   "stats.today": { en: "(today)", "zh-CN": "(今天)" },
   "stats.latestReport": { en: "Latest Report", "zh-CN": "最新报告" },
   "stats.generateReport": { en: "Generate Last Week Report", "zh-CN": "生成上周周报" },
+  "stats.generating": { en: "Generating...", "zh-CN": "生成中..." },
   "stats.noReport": { en: "No reports yet.", "zh-CN": "还没有报告。" },
   "stats.reportGenerated": { en: "Report generated", "zh-CN": "周报已生成" },
 
@@ -118,7 +119,7 @@ export function reportPrompt(lang: Language, range: string, totalMinutes: number
         "请基于以下番茄钟记录生成一份中文工作周报。",
         `时间范围：${range}`,
         `总工作时间：${totalMinutes} 分钟`,
-        "要求：按项目统计番茄钟数量和详情，不要编造不存在的工作。",
+        "要求：只做数据汇总，按项目统计番茄钟数量和详情。不要编造不存在的工作，不要包含建议、改进方向或Recommendations。",
         "记录：",
         summariesText
       ].join("\n")
@@ -126,7 +127,7 @@ export function reportPrompt(lang: Language, range: string, totalMinutes: number
         "Generate an English weekly work report based on the following pomodoro records.",
         `Period: ${range}`,
         `Total work time: ${totalMinutes} minutes`,
-        "Requirements: summarize pomodoro counts and details by project. Do not fabricate work.",
+        "Requirements: provide a data summary only — pomodoro counts and details by project. Do not fabricate work. Do NOT include suggestions, improvements, or Recommendations.",
         "Records:",
         summariesText
       ].join("\n");

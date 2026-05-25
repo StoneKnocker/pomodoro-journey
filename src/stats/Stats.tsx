@@ -26,6 +26,7 @@ export function Stats() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadData().then((loaded) => {
@@ -39,12 +40,15 @@ export function Stats() {
 
   async function generateWeeklyReport() {
     setStatus("");
+    setLoading(true);
     try {
       const next = await sendMessage({ type: "GENERATE_WEEKLY_REPORT" });
       setData(next);
       setStatus(_("stats.reportGenerated"));
     } catch (error) {
       setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -160,9 +164,9 @@ export function Stats() {
       <section className="report-preview">
         <div className="report-header">
           <h2>{_("stats.latestReport")}</h2>
-          <button type="button" onClick={generateWeeklyReport}>
+          <button type="button" onClick={generateWeeklyReport} disabled={loading}>
             <Sparkles size={18} />
-            {_("stats.generateReport")}
+            {loading ? _("stats.generating") : _("stats.generateReport")}
           </button>
         </div>
         {latestReport ? <pre>{latestReport.content}</pre> : <p>{_("stats.noReport")}</p>}
